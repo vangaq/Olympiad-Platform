@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
+        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    font-size: 48px; color: white;">
+            👤
+        </div>
+        <div>
+            <h1>{{ current_user.username }}</h1>
+            <p style="color: #666;">{{ current_user.email }}</p>
+            <div style="margin-top: 10px;">
+                <span class="rating-badge" style="font-size: 18px;">⭐ Рейтинг: {{ current_user.rating }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>{{ stats.solved_count or 0 }}</h3>
+        <p>Решено задач</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.total_attempts or 0 }}</h3>
+        <p>Всего попыток</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ "%.1f" | format((stats.solved_count / stats.total_attempts * 100) if stats.total_attempts else 0) }}%</h3>
+        <p>Успешность</p>
+    </div>
+</div>
+
+{% if solved_tasks %}
+<div class="card">
+    <h2>✅ Решенные задачи</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Задача</th>
+                <th>Сложность</th>
+                <th>Решено</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in solved_tasks %}
+            <tr>
+                <td>{{ t.title }}</td>
+                <td>
+                    {% if t.difficulty == 1 %}
+                        <span class="badge badge-easy">Легкая</span>
+                    {% elif t.difficulty == 2 %}
+                        <span class="badge badge-medium">Средняя</span>
+                    {% else %}
+                        <span class="badge badge-hard">Сложная</span>
+                    {% endif %}
+                </td>
+                <td>{{ t.first_solved_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if submissions %}
+<div class="card">
+    <h2>📊 Последние отправки</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Задача</th>
+                <th>Статус</th>
+                <th>Время</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td>{{ sub.task_title }}</td>
+                <td>
+                    {% if sub.status == 'accepted' %}
+                        <span class="badge badge-accepted">✅</span>
+                    {% elif sub.status == 'wrong_answer' %}
+                        <span class="badge badge-wrong">❌</span>
+                    {% elif sub.status == 'error' %}
+                        <span class="badge badge-wrong">💥</span>
+                    {% else %}
+                        <span class="badge badge-pending">⏳</span>
+                    {% endif %}
+                </td>
+                <td>{{ sub.submitted_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

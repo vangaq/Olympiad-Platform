@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h1>{{ task.title }}</h1>
+            <div class="task-meta" style="margin-top: 10px;">
+                {% if task.difficulty == 1 %}
+                    <span class="badge badge-easy">Легкая</span>
+                {% elif task.difficulty == 2 %}
+                    <span class="badge badge-medium">Средняя</span>
+                {% else %}
+                    <span class="badge badge-hard">Сложная</span>
+                {% endif %}
+                <span>📁 {{ task.category }}</span>
+                <span>⏱️ {{ task.time_limit }}мс</span>
+                <span>💾 {{ task.memory_limit }}МБ</span>
+                {% if solved %}
+                    <span class="badge badge-solved">✅ Решено</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ url_for('tasks') }}" class="btn btn-secondary">← Назад к задачам</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📋 Условие</h2>
+    <div style="line-height: 1.8; color: #444;">
+        {{ task.description | safe }}
+    </div>
+    
+    <h3 style="margin-top: 25px;">📥 Формат входных данных</h3>
+    <p>{{ task.input_format }}</p>
+    
+    <h3 style="margin-top: 20px;">📤 Формат выходных данных</h3>
+    <p>{{ task.output_format }}</p>
+    
+    <div class="example-box">
+        <strong>📝 Пример</strong>
+        <div style="margin-top: 10px;">
+            <p><strong>Вход:</strong></p>
+            <pre>{{ task.sample_input }}</pre>
+        </div>
+        <div style="margin-top: 10px;">
+            <p><strong>Выход:</strong></p>
+            <pre>{{ task.sample_output }}</pre>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>💡 Подсказка по вводу данных</h2>
+    <div style="background: #e8f4f8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+        <p><strong>Чтение одного числа:</strong></p>
+        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 5px;">n = int(input())</pre>
+        
+        <p style="margin-top: 10px;"><strong>Чтение нескольких чисел в одной строке:</strong></p>
+        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 5px;">a, b = map(int, input().split())</pre>
+        
+        <p style="margin-top: 10px;"><strong>Чтение списка чисел:</strong></p>
+        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 5px;">n = int(input())
+arr = list(map(int, input().split()))</pre>
+        
+        <p style="margin-top: 10px;"><strong>Чтение строки:</strong></p>
+        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 5px;">s = input().strip()</pre>
+    </div>
+</div>
+
+<div class="card">
+    <h2>💻 Ваше решение</h2>
+    <form method="POST" action="{{ url_for('task', task_id=task.id) }}">
+        <div class="form-group">
+            <label>Язык: Python 3</label>
+            <textarea name="code" class="code-editor" placeholder="# Введите ваш код здесь
+# Чтение данных:
+data = input().split()
+a = int(data[0])
+b = int(data[1])
+
+# Ваше решение:
+result = a + b
+
+# Вывод результата:
+print(result)" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
+            🚀 Отправить на проверку
+        </button>
+    </form>
+</div>
+
+{% if submissions %}
+<div class="card">
+    <h2>📊 История отправок</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Время</th>
+                <th>Статус</th>
+                <th>Сообщение</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td>{{ sub.submitted_at }}</td>
+                <td>
+                    {% if sub.status == 'accepted' %}
+                        <span class="badge badge-accepted">✅ Принято</span>
+                    {% elif sub.status == 'wrong_answer' %}
+                        <span class="badge badge-wrong">❌ Неверный ответ</span>
+                    {% elif sub.status == 'error' %}
+                        <span class="badge badge-wrong">💥 Ошибка</span>
+                    {% else %}
+                        <span class="badge badge-pending">⏳ Проверка</span>
+                    {% endif %}
+                </td>
+                <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis;">
+                    {{ sub.error_message or '-' }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

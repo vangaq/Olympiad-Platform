@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 60px 30px;">
+    <h1 style="font-size: 48px; margin-bottom: 20px;">🏆 Olympiad Training Platform</h1>
+    <p style="font-size: 20px; color: #666; max-width: 600px; margin: 0 auto 30px;">
+        Платформа для подготовки к олимпиадам по программированию. 
+        Решай задачи, соревнуйся с друзьями в PvP режиме и отслеживай свой прогресс!
+    </p>
+    
+    {% if not current_user.is_authenticated %}
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
+                Начать обучение
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary" style="font-size: 18px; padding: 15px 40px;">
+                Уже есть аккаунт
+            </a>
+        </div>
+    {% else %}
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('tasks') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
+                📚 К каталогу задач
+            </a>
+            <a href="{{ url_for('pvp') }}" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
+                ⚔️ PvP Соревнование
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>{{ stats.users }}</h3>
+        <p>Пользователей</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.tasks }}</h3>
+        <p>Задач</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.submissions }}</h3>
+        <p>Решений</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.solved }}</h3>
+        <p>Верных решений</p>
+    </div>
+</div>
+
+{% if top_users %}
+<div class="card">
+    <h2>🏅 Топ-10 пользователей</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Пользователь</th>
+                <th>Рейтинг</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in top_users %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ user.username }}</td>
+                <td><span class="rating-badge">⭐ {{ user.rating }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>🚀 Возможности платформы</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 20px;">
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
+            <h3>Каталог задач</h3>
+            <p style="color: #666;">Более 100+ задач различной сложности с автоматической проверкой</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">⚔️</div>
+            <h3>PvP Режим</h3>
+            <p style="color: #666;">Соревнуйся с друзьями в реальном времени 1 на 1</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+            <h3>Аналитика</h3>
+            <p style="color: #666;">Отслеживай свой прогресс и улучшай результаты</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🏆</div>
+            <h3>Рейтинг</h3>
+            <p style="color: #666;">Зарабатывай очки и поднимайся в таблице лидеров</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

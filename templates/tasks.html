@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог задач - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>📚 Каталог задач</h1>
+    
+    <form method="GET" class="filters">
+        <select name="difficulty" onchange="this.form.submit()">
+            <option value="all" {% if difficulty == 'all' %}selected{% endif %}>Все сложности</option>
+            <option value="1" {% if difficulty == '1' %}selected{% endif %}>Легкая ⭐</option>
+            <option value="2" {% if difficulty == '2' %}selected{% endif %}>Средняя ⭐⭐</option>
+            <option value="3" {% if difficulty == '3' %}selected{% endif %}>Сложная ⭐⭐⭐</option>
+        </select>
+        
+        <select name="category" onchange="this.form.submit()">
+            <option value="all" {% if category == 'all' %}selected{% endif %}>Все категории</option>
+            {% for cat in categories %}
+            <option value="{{ cat.category }}" {% if category == cat.category %}selected{% endif %}>{{ cat.category }}</option>
+            {% endfor %}
+        </select>
+        
+        <a href="{{ url_for('tasks') }}" class="btn btn-secondary">Сбросить</a>
+    </form>
+    
+    <div class="task-list">
+        {% for task in tasks %}
+        <div class="task-item">
+            <div class="task-info">
+                <h4>
+                    {% if task.id in user_progress and user_progress[task.id] %}
+                        ✅ 
+                    {% endif %}
+                    {{ task.title }}
+                </h4>
+                <div class="task-meta">
+                    {% if task.difficulty == 1 %}
+                        <span class="badge badge-easy">Легкая</span>
+                    {% elif task.difficulty == 2 %}
+                        <span class="badge badge-medium">Средняя</span>
+                    {% else %}
+                        <span class="badge badge-hard">Сложная</span>
+                    {% endif %}
+                    <span>📁 {{ task.category }}</span>
+                    <span>⏱️ {{ task.time_limit }}мс</span>
+                    <span>💾 {{ task.memory_limit }}МБ</span>
+                </div>
+            </div>
+            <a href="{{ url_for('task', task_id=task.id) }}" class="btn btn-primary">
+                {% if task.id in user_progress and user_progress[task.id] %}
+                    Решить снова
+                {% else %}
+                    Решить
+                {% endif %}
+            </a>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #666; padding: 40px;">
+            Задачи не найдены. Попробуйте изменить фильтры.
+        </p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

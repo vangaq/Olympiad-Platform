@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}PvP Комната - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card pvp-room">
+    <h1>⚔️ PvP Комната {{ room_id }}</h1>
+    
+    <div class="players">
+        <div class="player {% if player1 %}active{% endif %}">
+            <div style="font-size: 48px;">👤</div>
+            <h3>{{ player1.username if player1 else 'Ожидание...' }}</h3>
+            {% if player1 %}
+            <p>⭐ {{ player1.rating }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="vs">VS</div>
+        
+        <div class="player {% if player2 %}active{% endif %}">
+            <div style="font-size: 48px;">👤</div>
+            <h3>{{ player2.username if player2 else 'Ожидание...' }}</h3>
+            {% if player2 %}
+            <p>⭐ {{ player2.rating }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if room.status == 'waiting' %}
+    <div class="waiting-message">
+        ⏳ Ожидание второго игрока...
+        <p style="font-size: 16px; margin-top: 10px;">
+            Отправьте ссылку другу: <code>{{ request.url }}</code>
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% if task %}
+<div class="card" id="task-card">
+    <h2>📝 Задача: {{ task.title }}</h2>
+    <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+        <p>{{ task.description }}</p>
+        
+        <div style="margin-top: 15px;">
+            <strong>📥 Вход:</strong> {{ task.input_format }}
+        </div>
+        <div style="margin-top: 5px;">
+            <strong>📤 Выход:</strong> {{ task.output_format }}
+        </div>
+        
+        <div class="example-box" style="margin-top: 15px;">
+            <strong>Пример:</strong>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+                <div>
+                    <p><strong>Вход:</strong></p>
+                    <pre>{{ task.sample_input }}</pre>
+                </div>
+                <div>
+                    <p><strong>Выход:</strong></p>
+                    <pre>{{ task.sample_output }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>Ваше решение (Python 3):</label>
+        <textarea id="code-editor" class="code-editor" placeholder="# Введите ваш код здесь..."># Чтение входных данных
+data = input().split()
+a = int(data[0])
+b = int(data[1])
+
+# Ваше решение
+print(a + b)</textarea>
+    </div>
+    
+    <button id="submit-btn" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
+        🚀 Отправить решение
+    </button>
+    
+    <div id="result-area" style="margin-top: 20px; display: none;"></div>
+</div>
+{% endif %}
+
+<div id="game-result" class="card" style="display: none; text-align: center;">
+    <h2 id="result-title"></h2>
+    <p id="result-message"></p>
+    <a href="{{ url_for('pvp') }}" class="btn btn-primary" style="margin-top: 20px;">
+        Вернуться к PvP
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = io();
+    const roomId = '{{ room_id }}';
+    
+    // Присоединяемся к комнате
+    socket.emit('join_room', { room_id: roomId });
+    
+    // Обновление комнаты
+    socket.on('room_update', function(data) {
+        console.log('Room update:', data);
+        if (data.player2_id) {
+            location.reload(); // Перезагружаем когда второй игрок присоединился
+        }
+    });
+    
+    // Начало игры
+    socket.on('game_start', function(data) {
+        console.log('Game started:', data);
+        location.reload();
+    });
+    
+    // Результат отправки
+    socket.on('submission_result', function(data) {
+        const resultArea = document.getElementById('result-area');
+        resultArea.style.display = 'block';
+        
+        if (data.status === 'accepted') {
+            resultArea.innerHTML = `
+                <div class="flash flash-success">
+                    ✅ Решение принято! ${data.details}
+                </div>
+            `;
+        } else {
+            resultArea.innerHTML = `
+                <div class="flash flash-error">
+                    ❌ ${data.details}
+                </div>
+            `;
+        }
+    });
+    
+    // Конец игры
+    socket.on('game_finished', function(data) {
+        document.getElementById('task-card').style.display = 'none';
+        document.getElementById('game-result').style.display = 'block';
+        
+        const currentUserId = {{ current_user.id }};
+        if (data.winner_id === currentUserId) {
+            document.getElementById('result-title').innerHTML = '🏆 Победа!';
+            document.getElementById('result-message').innerHTML = 
+                'Поздравляем! Вы первым решили задачу верно! +25 к рейтингу';
+        } else {
+            document.getElementById('result-title').innerHTML = '😔 Поражение';
+            document.getElementById('result-message').innerHTML = 
+                'Соперник был быстрее. Попробуйте еще раз!';
+        }
+    });
+    
+    // Соперник вышел
+    socket.on('opponent_left', function(data) {
+        alert(data.message);
+        window.location.href = '{{ url_for("pvp") }}';
+    });
+    
+    // Отправка решения
+    document.getElementById('submit-btn').addEventListener('click', function() {
+        const code = document.getElementById('code-editor').value;
+        
+        if (!code.trim()) {
+            alert('Введите код решения');
+            return;
+        }
+        
+        this.disabled = true;
+        this.textContent = '⏳ Проверка...';
+        
+        socket.emit('submit_solution', {
+            room_id: roomId,
+            code: code
+        });
+    });
+    
+    // При выходе со страницы
+    window.addEventListener('beforeunload', function() {
+        socket.emit('leave_room', { room_id: roomId });
+    });
+</script>
+{% endblock %}

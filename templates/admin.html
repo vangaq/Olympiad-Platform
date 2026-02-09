@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Админка - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>⚙️ Административная панель</h1>
+    <p style="color: #666;">Управление пользователями, задачами и контентом платформы</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>{{ stats.users }}</h3>
+        <p>Пользователей</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.tasks }}</h3>
+        <p>Задач</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.submissions }}</h3>
+        <p>Отправок</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ stats.today_submissions }}</h3>
+        <p>Сегодня</p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>➕ Добавить новую задачу</h2>
+    <form method="POST" action="{{ url_for('add_task') }}">
+        <div class="form-group">
+            <label>Название</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Описание</label>
+            <textarea name="description" class="form-control" rows="4" required></textarea>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div class="form-group">
+                <label>Сложность</label>
+                <select name="difficulty" class="form-control">
+                    <option value="1">Легкая ⭐</option>
+                    <option value="2">Средняя ⭐⭐</option>
+                    <option value="3">Сложная ⭐⭐⭐</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Категория</label>
+                <input type="text" name="category" class="form-control" value="general">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Формат входных данных</label>
+            <input type="text" name="input_format" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Формат выходных данных</label>
+            <input type="text" name="output_format" class="form-control" required>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>Пример входных данных</label>
+                <textarea name="sample_input" class="form-control" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Пример выходных данных</label>
+                <textarea name="sample_output" class="form-control" rows="3" required></textarea>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Тесты (входные данные, по одному тесту на строку)</label>
+            <textarea name="tests_input" class="form-control" rows="5" required placeholder="3 5
+10 20
+-5 5"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Ожидаемые ответы (по одному на строку, соответствуют тестам)</label>
+            <textarea name="tests_output" class="form-control" rows="5" required placeholder="8
+30
+0"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-success">Добавить задачу</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>📚 Существующие задачи</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Сложность</th>
+                <th>Категория</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tasks %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td>{{ t.title }}</td>
+                <td>
+                    {% if t.difficulty == 1 %}
+                        <span class="badge badge-easy">Легкая</span>
+                    {% elif t.difficulty == 2 %}
+                        <span class="badge badge-medium">Средняя</span>
+                    {% else %}
+                        <span class="badge badge-hard">Сложная</span>
+                    {% endif %}
+                </td>
+                <td>{{ t.category }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_task', task_id=t.id) }}" 
+                          style="display: inline;" onsubmit="return confirm('Удалить задачу?');">
+                        <button type="submit" class="btn btn-danger" style="padding: 5px 15px; font-size: 14px;">
+                            Удалить
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>👥 Пользователи</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Имя</th>
+                <th>Email</th>
+                <th>Рейтинг</th>
+                <th>Решено</th>
+                <th>Отправок</th>
+                <th>Админ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="rating-badge">⭐ {{ u.rating }}</span></td>
+                <td>{{ u.solved_count or 0 }}</td>
+                <td>{{ u.submissions_count or 0 }}</td>
+                <td>{% if u.is_admin %}✅{% else %}❌{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

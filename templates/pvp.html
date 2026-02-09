@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}PvP Соревнования - Olympiad Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>⚔️ PvP Соревнования</h1>
+    <p style="color: #666;">Соревнуйтесь с другими программистами в реальном времени!</p>
+</div>
+
+<div class="card">
+    <h2>🎮 Создать комнату</h2>
+    <form method="POST" action="{{ url_for('create_pvp_room') }}" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label>Сложность задачи</label>
+            <select name="difficulty" class="form-control">
+                <option value="all">Любая</option>
+                <option value="1">Легкая</option>
+                <option value="2">Средняя</option>
+                <option value="3">Сложная</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success" style="font-size: 18px; padding: 12px 30px;">
+            Создать комнату
+        </button>
+    </form>
+</div>
+
+{% if active_rooms %}
+<div class="card">
+    <h2>🔥 Активные комнаты</h2>
+    <div class="task-list">
+        {% for room in active_rooms %}
+        <div class="task-item">
+            <div class="task-info">
+                <h4>Комната {{ room.id }}</h4>
+                <div class="task-meta">
+                    <span>👤 Создатель: {{ room.player1 }}</span>
+                    <span>⭐ Сложность: {{ room.task_difficulty }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('pvp_room', room_id=room.id) }}" class="btn btn-primary">
+                Присоединиться
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if matches %}
+<div class="card">
+    <h2>📊 История матчей</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Игрок 1</th>
+                <th>Игрок 2</th>
+                <th>Задача</th>
+                <th>Победитель</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in matches %}
+            <tr>
+                <td>{{ match.created_at }}</td>
+                <td>{{ match.player1_name }}</td>
+                <td>{{ match.player2_name }}</td>
+                <td>{{ match.task_title }}</td>
+                <td>
+                    {% if match.winner_name %}
+                        🏆 {{ match.winner_name }}
+                    {% else %}
+                        <span style="color: #999;">Ничья/Отмена</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>❓ Как это работает?</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">1️⃣</div>
+            <h4>Создайте комнату</h4>
+            <p style="color: #666; font-size: 14px;">Или присоединитесь к существующей</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">2️⃣</div>
+            <h4>Дождитесь соперника</h4>
+            <p style="color: #666; font-size: 14px;">Когда второй игрок войдет, игра начнется автоматически</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">3️⃣</div>
+            <h4>Решайте задачу</h4>
+            <p style="color: #666; font-size: 14px;">Кто первым решит задачу верно - побеждает!</p>
+        </div>
+        <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">4️⃣</div>
+            <h4>Получайте очки</h4>
+            <p style="color: #666; font-size: 14px;">Победитель получает +25 к рейтингу</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
