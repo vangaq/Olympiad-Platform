@@ -1,0 +1,3 @@
+{% macro difficulty_stars(level) -%}
+<span class="difficulty-stars" role="img" aria-label="Сложность: {{ level }} из 3"><span aria-hidden="true">{{ '★' * level }}</span></span>
+{%- endmacro %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_attempts.html" import attempts_table %}
+{% block title %}История попыток — Olympiad Platform{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>📋 История попыток</h1><p>Всего попыток: {{ total }}</p>
+    {{ attempts_table(attempts) }}
+    <div style="display: flex; gap: 20px; align-items: center; margin-top: 20px;">
+        {% if page > 1 %}<a class="btn btn-secondary" href="{{ url_for('history', page=page-1) }}">← Назад</a>{% endif %}
+        <span>Страница {{ page }} из {{ pages }}</span>
+        {% if page < pages %}<a class="btn btn-secondary" href="{{ url_for('history', page=page+1) }}">Далее →</a>{% endif %}
+    </div>
+</div>
+{% endblock %}

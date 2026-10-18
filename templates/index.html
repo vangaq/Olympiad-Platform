@@ -6,10 +6,10 @@
 <div class="card" style="text-align: center; padding: 60px 30px;">
     <h1 style="font-size: 48px; margin-bottom: 20px;">🏆 Olympiad Training Platform</h1>
     <p style="font-size: 20px; color: #666; max-width: 600px; margin: 0 auto 30px;">
-        Платформа для подготовки к олимпиадам по программированию. 
-        Решай задачи, соревнуйся с друзьями в PvP режиме и отслеживай свой прогресс!
+        Платформа для подготовки к олимпиадам по программированию.
+        Решай задачи, набирай баллы и отслеживай свой прогресс!
     </p>
-    
+
     {% if not current_user.is_authenticated %}
         <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
             <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
@@ -24,8 +24,8 @@
             <a href="{{ url_for('tasks') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
                 📚 К каталогу задач
             </a>
-            <a href="{{ url_for('pvp') }}" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
-                ⚔️ PvP Соревнование
+            <a href="{{ url_for('leaderboard') }}" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
+                🏆 Таблица лидеров
             </a>
         </div>
     {% endif %}
@@ -34,19 +34,19 @@
 <div class="stats-grid">
     <div class="stat-card">
         <h3>{{ stats.users }}</h3>
-        <p>Пользователей</p>
+        <p>{{ stats.users|ru_plural('пользователь', 'пользователя', 'пользователей') }}</p>
     </div>
     <div class="stat-card">
         <h3>{{ stats.tasks }}</h3>
-        <p>Задач</p>
+        <p>{{ stats.tasks|ru_plural('задача', 'задачи', 'задач') }}</p>
     </div>
     <div class="stat-card">
         <h3>{{ stats.submissions }}</h3>
-        <p>Решений</p>
+        <p>{{ stats.submissions|ru_plural('попытка', 'попытки', 'попыток') }}</p>
     </div>
     <div class="stat-card">
         <h3>{{ stats.solved }}</h3>
-        <p>Верных решений</p>
+        <p>{{ stats.solved|ru_plural('верное решение', 'верных решения', 'верных решений') }}</p>
     </div>
 </div>
 
@@ -58,7 +58,7 @@
             <tr>
                 <th>#</th>
                 <th>Пользователь</th>
-                <th>Рейтинг</th>
+                <th>Баллы</th>
             </tr>
         </thead>
         <tbody>
@@ -66,7 +66,7 @@
             <tr>
                 <td>{{ loop.index }}</td>
                 <td>{{ user.username }}</td>
-                <td><span class="rating-badge">⭐ {{ user.rating }}</span></td>
+                <td><span class="rating-badge">⭐ {{ user.points }}</span></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -80,12 +80,12 @@
         <div style="text-align: center; padding: 20px;">
             <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
             <h3>Каталог задач</h3>
-            <p style="color: #666;">Более 100+ задач различной сложности с автоматической проверкой</p>
+            <p style="color: #666;">{{ stats.tasks }} {{ stats.tasks|ru_plural('задача', 'задачи', 'задач') }} различной сложности с автоматической проверкой ответов</p>
         </div>
         <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">⚔️</div>
-            <h3>PvP Режим</h3>
-            <p style="color: #666;">Соревнуйся с друзьями в реальном времени 1 на 1</p>
+            <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
+            <h3>История попыток</h3>
+            <p style="color: #666;">Все твои ответы и результаты сохраняются в личном кабинете</p>
         </div>
         <div style="text-align: center; padding: 20px;">
             <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
