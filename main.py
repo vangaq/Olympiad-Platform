@@ -1,4 +1,8 @@
 """Run the platform with: python main.py."""
+from check_python import require_supported_python
+
+require_supported_python()
+
 import os
 from olympiad import create_app
 

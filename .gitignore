@@ -13,3 +13,6 @@ backups/
 *.log
 .pytest_cache/
 .coverage
+*.egg-info/
+build/
+dist/
