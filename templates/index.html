@@ -1,102 +1,23 @@
 {% extends "base.html" %}
-
-{% block title %}Главная - Olympiad Platform{% endblock %}
-
+{% block title %}Главная — Olympiad Platform{% endblock %}
 {% block content %}
-<div class="card" style="text-align: center; padding: 60px 30px;">
-    <h1 style="font-size: 48px; margin-bottom: 20px;">🏆 Olympiad Training Platform</h1>
-    <p style="font-size: 20px; color: #666; max-width: 600px; margin: 0 auto 30px;">
-        Платформа для подготовки к олимпиадам по программированию.
-        Решай задачи, набирай баллы и отслеживай свой прогресс!
-    </p>
-
-    {% if not current_user.is_authenticated %}
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
-                Начать обучение
-            </a>
-            <a href="{{ url_for('login') }}" class="btn btn-secondary" style="font-size: 18px; padding: 15px 40px;">
-                Уже есть аккаунт
-            </a>
-        </div>
-    {% else %}
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <a href="{{ url_for('tasks') }}" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
-                📚 К каталогу задач
-            </a>
-            <a href="{{ url_for('leaderboard') }}" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
-                🏆 Таблица лидеров
-            </a>
-        </div>
-    {% endif %}
-</div>
-
+<section class="dashboard-hero">
+    <div><span class="eyebrow">Привет, {{ current_user.username }}!</span><h1>Большие победы<br>начинаются <span>с одной задачи.</span></h1><p>Найди интересную тему, проверь свои идеи и сделай следующий шаг к олимпиаде.</p><div class="hero-actions"><a href="{{ url_for('tasks') }}" class="btn btn-primary">Начать тренировку {{ icon('arrow', 17) }}</a><a href="{{ url_for('profile') }}" class="btn btn-secondary">Мой прогресс</a></div></div>
+    <div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-trophy">{{ icon('trophy', 67) }}</div><span class="hero-float one">{{ icon('star', 14) }} Идея. Практика. Победа.</span><span class="hero-float two">{{ icon('check', 14) }} Ты можешь больше</span></div>
+</section>
+<div class="section-heading"><h2>Платформа в цифрах</h2><p>Здесь каждый учится в своём темпе.</p></div>
 <div class="stats-grid">
-    <div class="stat-card">
-        <h3>{{ stats.users }}</h3>
-        <p>{{ stats.users|ru_plural('пользователь', 'пользователя', 'пользователей') }}</p>
-    </div>
-    <div class="stat-card">
-        <h3>{{ stats.tasks }}</h3>
-        <p>{{ stats.tasks|ru_plural('задача', 'задачи', 'задач') }}</p>
-    </div>
-    <div class="stat-card">
-        <h3>{{ stats.submissions }}</h3>
-        <p>{{ stats.submissions|ru_plural('попытка', 'попытки', 'попыток') }}</p>
-    </div>
-    <div class="stat-card">
-        <h3>{{ stats.solved }}</h3>
-        <p>{{ stats.solved|ru_plural('верное решение', 'верных решения', 'верных решений') }}</p>
-    </div>
+    <div class="stat-card" data-tone="purple"><div class="stat-top"><span class="stat-label">Сообщество</span><span class="stat-icon">{{ icon('user', 18) }}</span></div><h3>{{ stats.users }}</h3><p>{{ stats.users|ru_plural('пользователь', 'пользователя', 'пользователей') }}</p></div>
+    <div class="stat-card" data-tone="blue"><div class="stat-top"><span class="stat-label">Для практики</span><span class="stat-icon blue">{{ icon('grid', 18) }}</span></div><h3>{{ stats.tasks }}</h3><p>{{ stats.tasks|ru_plural('задача', 'задачи', 'задач') }}</p></div>
+    <div class="stat-card" data-tone="amber"><div class="stat-top"><span class="stat-label">Не сдаёмся</span><span class="stat-icon amber">{{ icon('history', 18) }}</span></div><h3>{{ stats.submissions }}</h3><p>{{ stats.submissions|ru_plural('попытка', 'попытки', 'попыток') }}</p></div>
+    <div class="stat-card" data-tone="green"><div class="stat-top"><span class="stat-label">Получилось!</span><span class="stat-icon green">{{ icon('check', 18) }}</span></div><h3>{{ stats.solved }}</h3><p>{{ stats.solved|ru_plural('верное решение', 'верных решения', 'верных решений') }}</p></div>
 </div>
-
-{% if top_users %}
-<div class="card">
-    <h2>🏅 Топ-10 пользователей</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Пользователь</th>
-                <th>Баллы</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in top_users %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ user.username }}</td>
-                <td><span class="rating-badge">⭐ {{ user.points }}</span></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-<div class="card">
-    <h2>🚀 Возможности платформы</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 20px;">
-        <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
-            <h3>Каталог задач</h3>
-            <p style="color: #666;">{{ stats.tasks }} {{ stats.tasks|ru_plural('задача', 'задачи', 'задач') }} различной сложности с автоматической проверкой ответов</p>
-        </div>
-        <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
-            <h3>История попыток</h3>
-            <p style="color: #666;">Все твои ответы и результаты сохраняются в личном кабинете</p>
-        </div>
-        <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
-            <h3>Аналитика</h3>
-            <p style="color: #666;">Отслеживай свой прогресс и улучшай результаты</p>
-        </div>
-        <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">🏆</div>
-            <h3>Рейтинг</h3>
-            <p style="color: #666;">Зарабатывай очки и поднимайся в таблице лидеров</p>
-        </div>
-    </div>
+<div class="dashboard-grid">
+    <section class="card"><div class="card-header"><div><h2>Что потренируем?</h2><p>Выбери тему по настроению.</p></div></div><div class="category-links">
+        <a class="category-link" href="{{ url_for('tasks', category='math') }}"><span class="category-symbol">∑</span><div><strong>Математика</strong><small>Числа, закономерности и логика</small></div>{{ icon('arrow', 17) }}</a>
+        <a class="category-link" href="{{ url_for('tasks', category='strings') }}"><span class="category-symbol green">Аа</span><div><strong>Строки</strong><small>Символы, слова и работа с текстом</small></div>{{ icon('arrow', 17) }}</a>
+        <a class="category-link" href="{{ url_for('tasks', category='arrays') }}"><span class="category-symbol amber">[ ]</span><div><strong>Массивы</strong><small>Поиск, сортировка и наборы данных</small></div>{{ icon('arrow', 17) }}</a>
+    </div></section>
+    <section class="card leaderboard-card"><div class="card-header"><div><h2 class="ranking-title"><span class="ranking-symbol">{{ icon('trophy', 20) }}</span> Впереди всех</h2><p>Решают задачи и вдохновляют остальных.</p></div><a class="text-link" href="{{ url_for('leaderboard') }}">Весь рейтинг {{ icon('arrow', 15) }}</a></div><div class="table-wrap"><table class="table leaderboard-table"><thead><tr><th>Место</th><th>Участник</th><th>Баллы</th></tr></thead><tbody>{% for user in top_users %}<tr data-place="{{ loop.index }}" class="{{ 'current-user-row' if user.id == current_user.id }}"><td><span class="rank-badge">{{ '%02d'|format(loop.index) }}</span></td><td><div class="leader-user"><span class="avatar">{{ user.username[0]|upper }}</span><span>{{ user.username }}{% if user.id == current_user.id %}<span class="you-tag">ты</span>{% endif %}</span></div></td><td><span class="rating-badge">{{ icon('star', 13) }} {{ user.points }}</span></td></tr>{% else %}<tr><td colspan="3" class="muted">Здесь скоро появятся первые участники.</td></tr>{% endfor %}</tbody></table></div></section>
 </div>
 {% endblock %}

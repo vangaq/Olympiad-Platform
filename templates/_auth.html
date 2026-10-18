@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-layout">
+    <section class="auth-story" aria-label="О платформе">
+        <a href="{{ url_for('index') }}" class="brand brand-light"><span class="brand-mark">{{ icon('trophy', 25) }}</span><span>Olympiad<span class="brand-caption">TRAINING PLATFORM</span></span></a>
+        <div class="auth-story-content">
+            <span class="eyebrow light-eyebrow"><span class="status-dot"></span> Твоя подготовка начинается здесь</span>
+            <h1>Думай смелее.<br>Решай сложнее.<br><span>Расти с каждой задачей.</span></h1>
+            <p>Математика, алгоритмы и немного упорства. Всё, что нужно для твоей следующей победы.</p>
+            <div class="auth-illustration" aria-hidden="true">
+                <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+                <span class="math-float math-float-one">∑</span><span class="math-float math-float-two">x²</span><span class="math-float math-float-three">{ }</span>
+                <div class="challenge-preview"><span class="preview-label">МАЛЕНЬКИЙ ШАГ · БОЛЬШОЙ ПРОГРЕСС</span><div class="preview-equation">идея <span>+</span> практика <span>=</span> <strong>результат</strong></div><div class="preview-progress"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="preview-caption">Каждая решённая задача делает тебя сильнее</span></div>
+            </div>
+        </div>
+        <div class="auth-benefits"><span>{{ icon('check', 16) }} Три уровня сложности</span><span>{{ icon('check', 16) }} Личный прогресс</span><span>{{ icon('check', 16) }} Честный рейтинг</span></div>
+    </section>
+    <section class="auth-form-side">
+        <div class="auth-theme-controls">{% include "_theme_toggle.html" %}</div>
+        <div class="auth-form-card">
+            <div class="auth-symbol">{{ icon('spark', 28) }}</div>
+            <div class="auth-tabs" aria-label="Вход или регистрация">
+                <a href="{{ url_for('login') }}" class="{{ 'is-active' if request.endpoint == 'login' }}" {% if request.endpoint == 'login' %}aria-current="page"{% endif %}>Вход</a>
+                <a href="{{ url_for('register') }}" class="{{ 'is-active' if request.endpoint == 'register' }}" {% if request.endpoint == 'register' %}aria-current="page"{% endif %}>Регистрация</a>
+            </div>
+            {% block auth_form %}{% endblock %}
+            <p class="auth-security">{{ icon('lock', 14) }} Твои ответы и прогресс доступны только тебе</p>
+        </div>
+        <p class="auth-footer">Учись в своём темпе. Достигай своих целей.</p>
+    </section>
+</div>
+{% endblock %}

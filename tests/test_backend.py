@@ -21,7 +21,7 @@ def process_submit(config, cookie, token):
     app = create_app(config)
     with app.test_client() as client:
         client.set_cookie(app.config["SESSION_COOKIE_NAME"], cookie)
-        result = client.post("/api/tasks/1/submit", json={"answer": "95"}, headers={"X-CSRF-Token": token})
+        result = client.post("/api/tasks/1/submit", json={"answer": "30"}, headers={"X-CSRF-Token": token})
         return result.status_code, result.get_json()
 
 
@@ -66,12 +66,17 @@ class BackendTest(unittest.TestCase):
 
     def test_fresh_start_and_html_routes(self):
         catalog = self.client.get("/api/tasks").get_json()["tasks"]
-        self.assertGreaterEqual(len(catalog), 5)
+        self.assertEqual(len(catalog), 23)
         self.assertEqual({row["difficulty"] for row in catalog}, {1, 2, 3})
-        for path in ("/", "/tasks", "/login", "/register", "/leaderboard", "/static/app.js"):
+        for path in ("/login", "/register", "/static/app.js"):
             with self.subTest(path=path):
                 with self.client.get(path) as response:
                     self.assertEqual(response.status_code, 200)
+        for path in ("/", "/tasks", "/leaderboard", "/profile", "/history"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 302)
+                self.assertTrue(response.location.endswith("/login"))
         self.account()
         for path in ("/task/1", "/profile", "/history"):
             with self.subTest(path=path):
@@ -102,13 +107,13 @@ class BackendTest(unittest.TestCase):
         bob_client = self.app.test_client()
         bob = self.account("bob", bob_client)
         wrong = self.post("/api/tasks/1/submit", {"answer": "94"}).get_json()
-        right = self.post("/api/tasks/1/submit", {"answer": "95"}).get_json()
-        again = self.post("/api/tasks/1/submit", {"answer": "  95\n"}).get_json()
+        right = self.post("/api/tasks/1/submit", {"answer": "30"}).get_json()
+        again = self.post("/api/tasks/1/submit", {"answer": "  30\n"}).get_json()
         self.assertEqual((wrong["result"], wrong["points_awarded"]), ("Неверно", 0))
         self.assertEqual((right["result"], right["points_awarded"], right["points"]), ("Верно", 1, 1))
         self.assertEqual((again["points_awarded"], again["points"]), (0, 1))
-        self.post("/api/tasks/2/submit", {"answer": "84"})
-        self.post("/api/tasks/1/submit", {"answer": "95"}, bob_client)
+        self.post("/api/tasks/2/submit", {"answer": "odd"})
+        self.post("/api/tasks/1/submit", {"answer": "30"}, bob_client)
         profile = self.client.get("/api/me").get_json()
         self.assertEqual((profile["solved_count"], profile["points"], profile["total_attempts"]), (2, 2, 4))
         history = self.client.get("/api/history").get_json()
@@ -133,7 +138,7 @@ class BackendTest(unittest.TestCase):
             client = self.app.test_client()
             client.set_cookie(self.app.config["SESSION_COOKIE_NAME"], cookie)
             barrier.wait(timeout=15)
-            result = client.post("/api/tasks/1/submit", json={"answer": "95"}, headers={"X-CSRF-Token": token})
+            result = client.post("/api/tasks/1/submit", json={"answer": "30"}, headers={"X-CSRF-Token": token})
             return result.status_code, result.get_json()
         with ThreadPoolExecutor(max_workers=16) as pool:
             results = list(pool.map(submit, range(16)))
@@ -156,7 +161,7 @@ class BackendTest(unittest.TestCase):
     def test_private_routes_and_removed_admin(self):
         for path in ("/api/me", "/api/history", "/api/tasks/1"):
             self.assertEqual(self.client.get(path).status_code, 401)
-        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "95"}).status_code, 401)
+        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "30"}).status_code, 401)
         self.account()
         self.assertEqual(self.client.get("/admin").status_code, 404)
         self.assertEqual(self.client.post("/admin/delete_task/1", data={"csrf_token": self.token()}).status_code, 404)
@@ -166,8 +171,8 @@ class BackendTest(unittest.TestCase):
     def test_score_and_identity_tampering_is_rejected(self):
         self.account()
         for extra in ({"points": 1000}, {"user_id": 999}, {"account_id": 999},
-                      {"solved": True}, {"correct": True}, {"is_admin": True}, {"task_id": 2}, {"code": "print(95)"}):
-            result = self.post("/api/tasks/1/submit", {"answer": "95", **extra})
+                      {"solved": True}, {"correct": True}, {"is_admin": True}, {"task_id": 2}, {"code": "print(30)"}):
+            result = self.post("/api/tasks/1/submit", {"answer": "30", **extra})
             self.assertEqual(result.status_code, 400)
         self.assertEqual(self.post("/api/me", {"points": 999}).status_code, 405)
         self.assertEqual(self.client.get("/api/me").get_json()["points"], 0)
@@ -178,28 +183,28 @@ class BackendTest(unittest.TestCase):
         self.register()
         old_token = self.token()
         self.login()
-        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "95"}, token=old_token).status_code, 400)
+        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "30"}, token=old_token).status_code, 400)
         other = self.app.test_client()
-        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "95"}, token=self.token(other)).status_code, 400)
+        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "30"}, token=self.token(other)).status_code, 400)
         self.assertEqual(self.client.get("/logout").status_code, 405)
         self.assertEqual(self.post("/api/logout", {}).status_code, 200)
         self.assertEqual(self.client.get("/api/me").status_code, 401)
 
     def test_invalid_payloads_and_bounds(self):
         self.account()
-        for data in ({}, [], None, {"answer": None}, {"answer": 95}, {"answer": []},
+        for data in ({}, [], None, {"answer": None}, {"answer": 30}, {"answer": []},
                      {"answer": {}}, {"answer": True}, {"answer": ""}, {"answer": "  \n"}, {"answer": "a" * 2001}):
             response = self.client.post("/api/tasks/1/submit", data=json.dumps(data), content_type="application/json", headers={"X-CSRF-Token": self.token()})
             self.assertEqual(response.status_code, 400, data)
         self.assertEqual(self.client.post("/api/tasks/1/submit", data="{", content_type="application/json", headers={"X-CSRF-Token": self.token()}).status_code, 400)
-        self.assertEqual(self.client.post("/api/tasks/1/submit", data={"answer": "95", "csrf_token": self.token()}).status_code, 415)
+        self.assertEqual(self.client.post("/api/tasks/1/submit", data={"answer": "30", "csrf_token": self.token()}).status_code, 415)
         self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "x" * 70000}).status_code, 413)
-        duplicated = MultiDict([("csrf_token", self.token()), ("answer", "95"), ("answer", "0")])
+        duplicated = MultiDict([("csrf_token", self.token()), ("answer", "30"), ("answer", "0")])
         self.assertEqual(self.client.post("/task/1", data=duplicated).status_code, 400)
         for path in ("/api/tasks?difficulty=oops", "/api/history?page=0", "/api/history?page=nope"):
             self.assertEqual(self.client.get(path).status_code, 400)
         self.assertEqual(self.client.get("/api/history?page=" + "9" * 5000).status_code, 400)
-        self.assertEqual(self.post("/api/tasks/999999/submit", {"answer": "95"}).status_code, 404)
+        self.assertEqual(self.post("/api/tasks/999999/submit", {"answer": "30"}).status_code, 404)
         self.assertEqual(self.client.get("/api/history").get_json()["total"], 0)
 
     def test_answers_never_leak_in_task_payloads_or_html(self):
@@ -238,7 +243,7 @@ class BackendTest(unittest.TestCase):
         first = create_app(config)
         client = first.test_client()
         self.account(client=client)
-        self.post("/api/tasks/1/submit", {"answer": "95"}, client)
+        self.post("/api/tasks/1/submit", {"answer": "30"}, client)
         self.post("/api/tasks/2/submit", {"answer": "wrong"}, client)
         cookie = client.get_cookie(first.config["SESSION_COOKIE_NAME"]).value
         second = create_app(config)
@@ -272,10 +277,10 @@ class BackendTest(unittest.TestCase):
 
     def test_archive_preserves_history_and_points(self):
         self.account()
-        self.post("/api/tasks/1/submit", {"answer": "95"})
+        self.post("/api/tasks/1/submit", {"answer": "30"})
         self.sql("UPDATE problems SET active = 0 WHERE id = 1")
         self.assertEqual(self.client.get("/api/tasks/1").status_code, 404)
-        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "95"}).status_code, 404)
+        self.assertEqual(self.post("/api/tasks/1/submit", {"answer": "30"}).status_code, 404)
         self.assertEqual(self.client.get("/api/me").get_json()["points"], 1)
         self.assertEqual(self.client.get("/api/history").get_json()["total"], 1)
         self.assertEqual(self.sql("PRAGMA foreign_key_check"), [])
@@ -292,12 +297,12 @@ class BackendTest(unittest.TestCase):
 
     def test_version_two_removes_default_admin_and_preserves_other_users(self):
         self.account()
-        self.post("/api/tasks/1/submit", {"answer": "95"})
+        self.post("/api/tasks/1/submit", {"answer": "30"})
         self.post("/api/tasks/2/submit", {"answer": "wrong"})
         self.sql("ALTER TABLE accounts ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0 CHECK (is_admin IN (0, 1))")
         self.sql("INSERT INTO accounts (id, username, username_key, password_hash, is_admin) VALUES (20, 'admin', 'admin', ?, 1)",
                  (generate_password_hash(PASSWORD),))
-        self.sql("INSERT INTO attempts (account_id, problem_id, answer, correct) VALUES (20, 1, '95', 1)")
+        self.sql("INSERT INTO attempts (account_id, problem_id, answer, correct) VALUES (20, 1, '30', 1)")
         self.sql("INSERT INTO solves (account_id, problem_id) VALUES (20, 1)")
         self.sql("DELETE FROM schema_migrations WHERE version = 2")
         previous_session = self.app.test_client()
@@ -327,7 +332,7 @@ class BackendTest(unittest.TestCase):
         self.account()
         self.sql("CREATE TRIGGER fail_award BEFORE INSERT ON solves BEGIN SELECT RAISE(ABORT, 'test failure'); END")
         with self.assertRaises(sqlite3.IntegrityError):
-            self.post("/api/tasks/1/submit", {"answer": "95"})
+            self.post("/api/tasks/1/submit", {"answer": "30"})
         self.assertEqual(self.client.get("/api/history").get_json()["total"], 0)
         self.assertEqual(self.client.get("/api/me").get_json()["points"], 0)
 
@@ -352,13 +357,15 @@ class BackendTest(unittest.TestCase):
     def test_html_form_registration_submission_and_logout(self):
         def form_post(path, fields):
             return self.client.post(path, data={**fields, "csrf_token": self.token()}, follow_redirects=True)
-        self.assertEqual(form_post("/register", {"username": "forms", "password": PASSWORD}).status_code, 200)
+        registered = form_post("/register", {"username": "forms", "password": PASSWORD})
+        self.assertEqual(registered.status_code, 200)
+        self.assertEqual(registered.request.path, "/")
         response = form_post("/login", {"username": "forms", "password": PASSWORD})
-        self.assertEqual(response.request.path, "/tasks")
-        response = form_post("/task/1", {"answer": "95"})
+        self.assertEqual(response.request.path, "/")
+        response = form_post("/task/1", {"answer": "30"})
         self.assertIn("Верно! +1 балл.", response.get_data(as_text=True))
         self.assertEqual(response.request.path, "/task/1")
-        self.assertEqual(form_post("/logout", {}).request.path, "/")
+        self.assertEqual(form_post("/logout", {}).request.path, "/login")
 
 
 class LegacyMigrationTest(unittest.TestCase):

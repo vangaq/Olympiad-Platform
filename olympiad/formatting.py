@@ -8,6 +8,11 @@ MONTHS = (
 )
 
 
+def statement_text(value):
+    note = "\n\nДля приведённых входных данных запишите результат. Программу отправлять не нужно."
+    return value.removesuffix(note)
+
+
 def ru_plural(value, one, few, many):
     number = abs(int(value))
     if 11 <= number % 100 <= 14:

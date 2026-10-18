@@ -47,8 +47,21 @@ class HttpAcceptanceTest(unittest.TestCase):
 
             def stop():
                 if process and process.poll() is None:
-                    process.terminate()
+                    if os.name == "nt":
+                        # Windows venv launchers can create a child Python process.
+                        # Terminate the whole test-server tree, not just its launcher.
+                        subprocess.run(
+                            [str(Path(os.environ["SystemRoot"]) / "System32" / "taskkill.exe"),
+                             "/PID", str(process.pid), "/T", "/F"],
+                            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                        )
+                    else:
+                        process.terminate()
                     process.wait(timeout=10)
+                    with socket.socket() as probe:
+                        probe.settimeout(1)
+                        self.assertNotEqual(probe.connect_ex(("127.0.0.1", port)), 0,
+                                            "Server still accepts connections after shutdown")
 
             def browser():
                 jar = http.cookiejar.CookieJar()
@@ -76,7 +89,7 @@ class HttpAcceptanceTest(unittest.TestCase):
                 token = get(alice, "/api/csrf")["csrf_token"]
                 cookies = "; ".join(f"{cookie.name}={cookie.value}" for cookie in jar)
                 def concurrent_submit(_):
-                    request = urllib.request.Request(base + "/api/tasks/1/submit", data=b'{"answer":"95"}',
+                    request = urllib.request.Request(base + "/api/tasks/1/submit", data=b'{"answer":"30"}',
                         headers={"Content-Type": "application/json", "X-CSRF-Token": token, "Cookie": cookies})
                     with urllib.request.urlopen(request, timeout=30) as response:
                         return json.load(response)
@@ -92,7 +105,7 @@ class HttpAcceptanceTest(unittest.TestCase):
                 start()
                 self.assertEqual(get(alice, "/api/me")["points"], 1)
                 self.assertEqual(get(alice, "/api/history")["total"], 13)
-                self.assertEqual(post(alice, "/api/tasks/1/submit", {"answer": "95"})["points_awarded"], 0)
+                self.assertEqual(post(alice, "/api/tasks/1/submit", {"answer": "30"})["points_awarded"], 0)
                 post(alice, "/api/logout", {})
                 post(alice, "/api/login", {"username": "http_alice", "password": "http-test-password"})
                 self.assertEqual(get(alice, "/api/history")["total"], 14)

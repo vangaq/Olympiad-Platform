@@ -1,12 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Таблица лидеров — Olympiad Platform{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>🏆 Таблица лидеров</h1>
-    <p>Одна впервые решённая задача — один балл. При равных баллах пользователи упорядочены по логину.</p>
-    <table class="table"><thead><tr><th>Место</th><th>Пользователь</th><th>Баллы</th></tr></thead><tbody>
-    {% for user in users %}<tr><td>{{ loop.index }}</td><td>{{ user.username }}</td><td><span class="rating-badge">⭐ {{ user.points }}</span></td></tr>
-    {% else %}<tr><td colspan="3">Пользователей пока нет.</td></tr>{% endfor %}
-    </tbody></table>
-</div>
+<div class="page-heading"><div><span class="eyebrow">Вдохновляем друг друга</span><h1>Таблица лидеров</h1><p>За каждым баллом — решённая задача. За каждым результатом — практика.</p></div><span class="heading-tag">{{ icon('trophy', 16) }} Одна задача — один балл</span></div>
+{% if users %}<div class="podium-grid">{% for user in users[:3] %}<div class="podium-card{% if loop.first %} first{% endif %}" data-place="{{ loop.index }}"><span class="podium-rank">{% if loop.first %}{{ icon('trophy', 24) }}{% else %}{{ '%02d'|format(loop.index) }}{% endif %}</span><div><h3>{{ user.username }}{% if user.id == current_user.id %}<span class="you-tag">ты</span>{% endif %}</h3><p>{{ user.points }} {{ user.points|ru_plural('балл', 'балла', 'баллов') }} · {{ loop.index }} место</p></div></div>{% endfor %}</div>{% endif %}
+<section class="card leaderboard-card"><div class="card-header"><div><h2>Все участники</h2><p>При равных баллах — по логину в алфавитном порядке.</p></div><span class="badge task-category">{{ users|length }} {{ (users|length)|ru_plural('участник', 'участника', 'участников') }}</span></div><div class="table-wrap"><table class="table leaderboard-table"><thead><tr><th>Место</th><th>Участник</th><th>Баллы</th><th>Решено задач</th></tr></thead><tbody>
+{% for user in users %}<tr data-place="{{ loop.index }}" class="{{ 'current-user-row' if user.id == current_user.id }}"><td><span class="rank-badge">{{ '%02d'|format(loop.index) }}</span></td><td><div class="leader-user"><span class="avatar">{{ user.username[0]|upper }}</span><span>{{ user.username }}{% if user.id == current_user.id %}<span class="you-tag">ты</span>{% endif %}</span></div></td><td><span class="rating-badge">{{ icon('star', 13) }} {{ user.points }}</span></td><td class="muted">{{ user.points }}</td></tr>{% else %}<tr><td colspan="4"><div class="empty-state">{{ icon('trophy', 32) }}<p>Первые победы ещё впереди.</p></div></td></tr>{% endfor %}
+</tbody></table></div></section>
 {% endblock %}

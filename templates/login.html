@@ -1,17 +1,14 @@
-{% extends "base.html" %}
+{% extends "_auth.html" %}
 {% block title %}Вход — Olympiad Platform{% endblock %}
-{% block content %}
-<div class="card" style="max-width: 400px; margin: 0 auto;">
-    <h1 style="text-align: center; margin-bottom: 30px;">🔐 Вход</h1>
-    {% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
-    <form method="POST" action="{{ url_for('login') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label for="username">Логин</label>
-            <input id="username" name="username" class="form-control" maxlength="128" autocomplete="username" required autofocus value="{{ request.form.get('username', '') }}"></div>
-        <div class="form-group"><label for="password">Пароль</label>
-            <input type="password" id="password" name="password" class="form-control" maxlength="128" autocomplete="current-password" required></div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Войти</button>
-    </form>
-    <p style="text-align: center; margin-top: 20px;">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
-</div>
+{% block auth_form %}
+<h2>С возвращением!</h2>
+<p class="auth-intro">Войди, чтобы продолжить с того места, где остановился.</p>
+{% if error %}<div class="flash flash-error" role="alert">{{ icon('close', 18) }}<span>{{ error }}</span></div>{% endif %}
+<form method="POST" action="{{ url_for('login') }}" class="auth-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group"><label for="username">Логин</label><input id="username" name="username" class="form-control" maxlength="128" autocomplete="username" placeholder="Логин" required autofocus value="{{ request.form.get('username', '') }}"></div>
+    <div class="form-group"><label for="password">Пароль</label><input type="password" id="password" name="password" class="form-control" maxlength="128" autocomplete="current-password" placeholder="Пароль" required></div>
+    <button type="submit" class="btn btn-primary auth-submit">Войти {{ icon('arrow', 18) }}</button>
+</form>
+<p class="auth-switch">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
 {% endblock %}

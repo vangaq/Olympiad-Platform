@@ -1,19 +1,14 @@
-{% extends "base.html" %}
+{% extends "_auth.html" %}
 {% block title %}Регистрация — Olympiad Platform{% endblock %}
-{% block content %}
-<div class="card" style="max-width: 400px; margin: 0 auto;">
-    <h1 style="text-align: center; margin-bottom: 30px;">📝 Регистрация</h1>
-    {% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
-    <form method="POST" action="{{ url_for('register') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label for="username">Логин</label>
-            <input id="username" name="username" class="form-control" minlength="3" maxlength="32" autocomplete="username" required autofocus value="{{ request.form.get('username', '') }}">
-            <small>3–32 символа: буквы, цифры, точка, дефис или подчёркивание.</small></div>
-        <div class="form-group"><label for="password">Пароль</label>
-            <input type="password" id="password" name="password" class="form-control" minlength="8" maxlength="128" autocomplete="new-password" required>
-            <small>От 8 до 128 символов.</small></div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">Зарегистрироваться</button>
-    </form>
-    <p style="text-align: center; margin-top: 20px;">Есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
-</div>
+{% block auth_form %}
+<h2>Начни свою историю.</h2>
+<p class="auth-intro">После регистрации откроется главная страница.</p>
+{% if error %}<div class="flash flash-error" role="alert">{{ icon('close', 18) }}<span>{{ error }}</span></div>{% endif %}
+<form method="POST" action="{{ url_for('register') }}" class="auth-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group"><label for="username">Логин</label><input id="username" name="username" class="form-control" minlength="3" maxlength="32" autocomplete="username" placeholder="Выберите логин" required autofocus value="{{ request.form.get('username', '') }}"><small>3–32 символа: буквы, цифры, точка, дефис или подчёркивание.</small></div>
+    <div class="form-group"><label for="password">Пароль</label><input type="password" id="password" name="password" class="form-control" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Не меньше 8 символов" required><small>От 8 до 128 символов.</small></div>
+    <button type="submit" class="btn btn-primary auth-submit">Зарегистрироваться {{ icon('arrow', 18) }}</button>
+</form>
+<p class="auth-switch">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
 {% endblock %}

@@ -1,13 +1,8 @@
 {% extends "base.html" %}
 {% from "_task_meta.html" import difficulty_stars %}
-
-{% block title %}Каталог задач - Olympiad Platform{% endblock %}
-
+{% block title %}Каталог задач — Olympiad Platform{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>📚 Каталог задач</h1>
-
-    <p class="catalog-intro">Выберите тему и сложность — и переходите к решению.</p>
+<div class="page-heading"><div><span class="eyebrow">Практика каждый день</span><h1>Каталог задач</h1><p>Выбери свой вызов. От простых вычислений — к непростым идеям.</p></div><span class="heading-tag">{{ icon('star', 16) }} Одна задача — один балл</span></div>
     <form method="GET" action="{{ url_for('tasks') }}" class="catalog-filters" data-auto-submit>
         <div class="filter-field">
             <label id="difficulty-label" for="difficulty-filter">Уровень сложности</label>
@@ -30,42 +25,15 @@
         <a href="{{ url_for('tasks') }}" class="filter-reset"><span aria-hidden="true">↺</span> Сбросить</a>
         <noscript><button type="submit" class="btn btn-primary">Применить</button></noscript>
     </form>
-    <p class="catalog-count">Найдено задач: <strong>{{ tasks|length }}</strong></p>
-    <div class="task-list">
-        {% for task in tasks %}
-        <div class="task-item">
-            <div class="task-info">
-                <h4>
-                    {% if task.id in user_progress and user_progress[task.id] %}
-                        ✅
-                    {% endif %}
-                    {{ task.title }} {{ difficulty_stars(task.difficulty) }}
-                </h4>
-                <div class="task-meta">
-                    {% if task.difficulty == 1 %}
-                        <span class="badge badge-easy">Лёгкая</span>
-                    {% elif task.difficulty == 2 %}
-                        <span class="badge badge-medium">Средняя</span>
-                    {% else %}
-                        <span class="badge badge-hard">Сложная</span>
-                    {% endif %}
-                    <span class="task-category">{{ category_label(task.category) }}</span>
-                    <span>⭐ 1 балл за первое решение</span>
-                </div>
-            </div>
-            <a href="{{ url_for('task', task_id=task.id) }}" class="btn btn-primary">
-                {% if task.id in user_progress and user_progress[task.id] %}
-                    Решить снова
-                {% else %}
-                    Решить
-                {% endif %}
-            </a>
-        </div>
-        {% else %}
-        <p style="text-align: center; color: #666; padding: 40px;">
-            Задачи не найдены. Попробуйте изменить фильтры.
-        </p>
-        {% endfor %}
-    </div>
+<div class="catalog-toolbar"><p class="catalog-count"><strong>{{ tasks|length }}</strong> {{ (tasks|length)|ru_plural('задача', 'задачи', 'задач') }} в каталоге</p><span>Математика · Строки · Массивы</span></div>
+<div class="task-list">
+{% for task in tasks %}
+{% set done = task.id in user_progress and user_progress[task.id] %}
+<article class="task-item{% if done %} task-completed{% endif %}" data-difficulty="{{ task.difficulty }}">
+    <div class="task-card-top"><span class="task-category">{{ category_label(task.category) }}</span><span class="task-state{% if done %} completed{% endif %}">{% if done %}{{ icon('check', 13) }} Решено{% else %}№ {{ '%02d'|format(task.id) }}{% endif %}</span></div>
+    <div class="task-info"><h2><a href="{{ url_for('task', task_id=task.id) }}">{{ task.title }}</a> {{ difficulty_stars(task.difficulty) }}</h2><p class="task-excerpt">{{ task.description|statement_text }}</p></div>
+    <div class="task-card-bottom"><span class="badge {{ {1:'badge-easy', 2:'badge-medium', 3:'badge-hard'}[task.difficulty] }}">{{ difficulty_labels[task.difficulty] }}</span><a href="{{ url_for('task', task_id=task.id) }}" class="task-action">{{ 'Повторить' if done else 'Решить' }} {{ icon('arrow', 16) }}</a></div>
+</article>
+{% else %}<div class="empty-state catalog-empty">{{ icon('grid', 36) }}<h3>Пока ничего не нашлось</h3><p>Попробуй другую тему или уровень сложности.</p><a class="btn btn-soft" href="{{ url_for('tasks') }}">Сбросить фильтры</a></div>{% endfor %}
 </div>
 {% endblock %}

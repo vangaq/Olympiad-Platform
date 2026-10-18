@@ -1,23 +1,21 @@
 {% from "_task_meta.html" import difficulty_stars %}
+{% from "_icons.html" import icon %}
 {% macro attempts_table(attempts) %}
 {% if attempts %}
-<div style="overflow-x: auto;">
-<table class="table">
-    <thead><tr><th>Дата и время (МСК)</th><th>Задача</th><th>Отправленный ответ</th><th>Результат</th></tr></thead>
+<div class="table-wrap">
+<table class="table attempts-table">
+    <thead><tr><th>Дата и время · МСК</th><th>Задача</th><th>Твой ответ</th><th>Результат</th></tr></thead>
     <tbody>
     {% for attempt in attempts %}
         <tr>
-            <td>{{ attempt.created_at|datetime_ru }}</td>
-            <td>{% if attempt.active %}<a class="task-title-link" href="{{ url_for('task', task_id=attempt.task_id) }}">{{ attempt.task_title }} {{ difficulty_stars(attempt.difficulty) }}</a>{% else %}{{ attempt.task_title }} {{ difficulty_stars(attempt.difficulty) }} (в архиве){% endif %}</td>
-            <td style="max-width: 420px; overflow-wrap: anywhere;">
-                {% if attempt.kind == 'legacy_code' %}<small>Перенесено: решение на Python</small>{% endif %}
-                <pre style="white-space: pre-wrap;">{{ attempt.answer }}</pre>
-            </td>
-            <td><span class="badge {{ 'badge-accepted' if attempt.correct else 'badge-wrong' }}">{{ attempt.result }}</span></td>
+            <td class="date-cell">{{ attempt.created_at|datetime_ru }}</td>
+            <td>{% if attempt.active %}<a class="task-title-link" href="{{ url_for('task', task_id=attempt.task_id) }}">{{ attempt.task_title }} {{ difficulty_stars(attempt.difficulty) }}</a>{% else %}<span class="muted">{{ attempt.task_title }} {{ difficulty_stars(attempt.difficulty) }} (в архиве)</span>{% endif %}</td>
+            <td>{% if attempt.kind == 'legacy_code' %}<small class="muted">Перенесено: решение на Python</small>{% endif %}<pre class="answer-value">{{ attempt.answer }}</pre></td>
+            <td><span class="badge {{ 'badge-accepted' if attempt.correct else 'badge-wrong' }}">{{ icon('check' if attempt.correct else 'close', 12) }} {{ attempt.result }}</span></td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
 </div>
-{% else %}<p>Попыток пока нет. Выберите задачу в каталоге.</p>{% endif %}
+{% else %}<div class="empty-state">{{ icon('history', 32) }}<h3>Всё начинается с первой попытки</h3><p>Выбери задачу и отправь свой ответ. Он появится здесь.</p></div>{% endif %}
 {% endmacro %}

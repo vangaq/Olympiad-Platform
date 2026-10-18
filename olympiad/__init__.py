@@ -13,7 +13,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import cleanup_legacy_data, close_db, get_db, initialize_database, normalize_answer, record_attempt, username_key
-from .formatting import datetime_ru, ru_plural
+from .formatting import datetime_ru, ru_plural, statement_text
 from .security import check_csrf, csrf_token, login_required, persistent_secret, rate_limit
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -107,12 +107,13 @@ def leaderboard_rows(limit=None):
 
 def create_app(config=None):
     app = Flask(__name__, template_folder=str(ROOT / "templates"), static_folder=str(ROOT / "static"))
-    app.jinja_env.filters.update(ru_plural=ru_plural, datetime_ru=datetime_ru)
+    app.jinja_env.filters.update(ru_plural=ru_plural, datetime_ru=datetime_ru, statement_text=statement_text)
     app.config.update(
         DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "database.db")),
         BACKUP_DIR=str(ROOT / "backups"), SECRET_KEY=os.environ.get("SECRET_KEY"),
         SECRET_FILE=str(ROOT / "instance" / "secret.key"),
         MAX_CONTENT_LENGTH=65536, MAX_FORM_MEMORY_SIZE=65536, MAX_FORM_PARTS=20,
+        TEMPLATES_AUTO_RELOAD=True,
         SESSION_COOKIE_NAME="olympiad_session", SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax", SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE") == "1",
         PERMANENT_SESSION_LIFETIME=timedelta(days=7), RATE_LIMIT_ENABLED=True,
@@ -152,6 +153,10 @@ def create_app(config=None):
                 session.clear()
         if request.url_rule is None:
             return
+        if (not g.user.is_authenticated and request.method == "GET"
+                and not request.path.startswith("/api/")
+                and request.endpoint not in {"login", "register", "static"}):
+            return redirect(url_for("login"))
         if request.path.startswith("/api/") and request.method in {"POST", "PUT", "PATCH", "DELETE"} and not request.is_json:
             abort(415, description="API принимает Content-Type: application/json.")
         check_csrf()
@@ -212,6 +217,8 @@ def create_app(config=None):
     @app.route("/register", methods=["GET", "POST"])
     def register():
         if request.method == "GET":
+            if g.user.is_authenticated:
+                return redirect(url_for("index"))
             return render_template("register.html")
         rate_limit("register", request.remote_addr, 20, 3600)
         data = payload({"username", "password"})
@@ -222,21 +229,28 @@ def create_app(config=None):
                 abort(400, description=str(error))
             return render_template("register.html", error=str(error)), 400
         try:
-            get_db().execute("INSERT INTO accounts (username, username_key, password_hash) VALUES (?, ?, ?)",
-                             (username, username_key(username), generate_password_hash(password)))
+            account = get_db().execute("INSERT INTO accounts (username, username_key, password_hash) VALUES (?, ?, ?)",
+                                       (username, username_key(username), generate_password_hash(password)))
         except sqlite3.IntegrityError:
             if request.is_json:
                 abort(409, description="Этот логин уже занят.")
             return render_template("register.html", error="Этот логин уже занят."), 409
         if request.is_json:
             return jsonify(message="Аккаунт создан. Войдите в систему."), 201
-        flash("Регистрация успешна! Теперь войдите в аккаунт.", "success")
-        return redirect(url_for("login"), code=303)
+        session.clear()
+        session["account_id"] = account.lastrowid
+        session["session_version"] = 0
+        session.permanent = True
+        csrf_token()
+        flash("Аккаунт создан. Добро пожаловать!", "success")
+        return redirect(url_for("index"), code=303)
 
     @app.post("/api/login")
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "GET":
+            if g.user.is_authenticated:
+                return redirect(url_for("index"))
             return render_template("login.html")
         rate_limit("login_ip", request.remote_addr, 50, 900)
         data = payload({"username", "password"})
@@ -266,7 +280,7 @@ def create_app(config=None):
         if request.is_json:
             return jsonify(user=public_profile(user["id"]), csrf_token=token)
         flash(f"Добро пожаловать, {user['username']}!", "success")
-        return redirect(url_for("tasks"), code=303)
+        return redirect(url_for("index"), code=303)
 
     @app.post("/api/logout")
     @app.post("/logout")
@@ -276,7 +290,7 @@ def create_app(config=None):
         if request.is_json:
             return jsonify(message="Вы вышли из аккаунта.", csrf_token=csrf_token())
         flash("Вы вышли из аккаунта.", "info")
-        return redirect(url_for("index"), code=303)
+        return redirect(url_for("login"), code=303)
 
     @app.get("/api/tasks")
     @app.get("/tasks")

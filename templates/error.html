@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Ошибка {{ status }} — Olympiad Platform{% endblock %}
 {% block content %}
-<div class="card"><h1>Ошибка {{ status }}</h1><p role="alert">{{ message }}</p>
-    <a class="btn btn-primary" style="margin-top: 20px;" href="{{ url_for('tasks') }}">К задачам</a></div>
+<div class="card error-card"><div class="error-number">{{ status }}</div><h1>Что-то пошло не так</h1><p role="alert">{{ message }}</p><a class="btn btn-primary" href="{{ url_for('tasks') }}">Вернуться к задачам {{ icon('arrow', 16) }}</a></div>
 {% endblock %}
